@@ -11,7 +11,7 @@ setuptools.setup(
     description="A python package for simulation of optics in anisotropic media",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/oscarmunoz20/owlmPy",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
