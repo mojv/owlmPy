@@ -1,48 +1,24 @@
-Package home at PyPI: http://pypi.python.org/pypi/tmm
+Package home at PyPI: http://pypi.python.org/pypi/owlmPy
 
-Package home at Github: https://github.com/sbyrnes321/tmm
+Package home at Github: https://github.com/oscarmunoz20/owlmPy
 
-# PyTMM
-Transfer Matrix Method implementation &amp; RefractiveIndex.info database (2015-05-24) browser
+# About owlmPy
+owlmPy is a python package designed for the simulation of electromagnetic waves in layered media that takes into account materials anisotropies
 
 ## Documentation
-Extended documentation can be found at  [kitchenknif.github.io/PyTMM](https://kitchenknif.github.io/PyTMM)
+This package is a result of a paper pubilished at  (Link de la tesis)
 
+## Installation
+It can be installed using pip:
 
-## Installation &amp; Basic Usage
-By default the RefractiveIndex module thinks that it is installed side-by-side with the RefractiveIndex.info database:
+    pip install owlmPy
 
-    .
-    +-- _PyTMM
-    |   +-- refractiveIndex.py
-    +-- RefractiveIndex
-    |   +-- library.yml
+And inported in python code:
 
+    import owlmPy as ow
 
-In this case, the database can be used as follows:
+See the following notebook to get an example. 
 
-    catalog = RefractiveIndex()
-    mat = catalog.getMaterial('main', 'Si', 'Aspnes')
-    # wavelength in nanometers
-    n = mat.getRefractiveIndex(500))
-    n = mat.getExtinctionCoefficient(500))
-
-If your folder structure is different, you just need to specify the path to the RefractiveIndex database:
-
-    catalog = RefractiveIndex("./path/to/folder/with/RefractiveIndex/database")
-    mat = catalog.getMaterial('main', 'Si', 'Aspnes')
-    n = mat.getRefractiveIndex(500))  # wavelength in nanometers
-
-
-Examples of using the transferMatrix module can be found in
-
-    .
-    +-- _PyTMM
-    |   +-- examples
-
-
-## Dependencies
+## Required Dependencies
 - numpy
-- scipy
-- pyyaml
-- matplotlib (for plotting)
+
