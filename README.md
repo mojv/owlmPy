@@ -17,7 +17,7 @@ And inported in python code:
 
     import owlmPy as ow
 
-See the following notebook to get an example. 
+See the following <a href="https://github.com/oscarmunoz20/owlmPy/blob/master/ow_example.ipynb" >notebook</a> to get an example . 
 
 ## Required Dependencies
 - numpy
