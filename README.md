@@ -13,7 +13,7 @@ It can be installed using pip:
 
     pip install owlmPy
 
-And inported in python code:
+And imported in python code:
 
     import owlmPy as ow
 
