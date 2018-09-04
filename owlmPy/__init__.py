@@ -3,5 +3,5 @@
 doc
 
 """
-name = "owlmpy"
-from .owlmpy import *
+name = "owlmPy"
+from .owlmPy import *
