@@ -6,7 +6,7 @@ Package home at Github: https://github.com/oscarmunoz20/owlmPy
 owlmPy is a python package designed for the simulation of electromagnetic waves in layered media that takes into account materials anisotropies
 
 ## Documentation
-This package is a result of a paper pubilished at  (Link de la tesis)
+This package is a result of https://v2.overleaf.com/read/pyycjpvfvmqr
 
 ## Installation
 It can be installed using pip:
