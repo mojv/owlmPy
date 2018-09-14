@@ -21,4 +21,4 @@ See the following <a href="https://github.com/oscarmunoz20/owlmPy/blob/master/ow
 
 ## Required Dependencies
 - numpy
-
+- numba
