@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="owlmPy",
-    version="0.0.2",
+    version="0.0.3",
     author="Oscar Munoz, Nivolas Avilan, Cesar Herreno",
     author_email="oscar.munozs@utadeo.edu.co",
     description="A python package for simulation of optics in anisotropic media",

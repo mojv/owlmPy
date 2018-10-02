@@ -4,4 +4,5 @@ doc
 
 """
 name = "owlmPy"
-from .owlmPy import *
+from .twobytwoMatrix import *
+from .fdtd_1d import *
