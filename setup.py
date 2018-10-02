@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="owlmPy",
-    version="0.0.3",
+    version="0.0.4",
     author="Oscar Munoz, Nivolas Avilan, Cesar Herreno",
     author_email="oscar.munozs@utadeo.edu.co",
-    description="A python package for simulation of optics in anisotropic media",
+    description="A python package for the modeling and simulation of the propagation of electromagnetic waves in structured multilayers with magneto-optical activity using FDTD method",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/oscarmunoz20/owlmPy",
