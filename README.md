@@ -17,7 +17,7 @@ And imported in python code:
 
     import owlmPy as ow
 
-See the following <a href="https://github.com/oscarmunoz20/owlmPy/blob/master/twobytwo_example.ipynb" >notebook</a> to get an example of the two by two matrix method.
+See the following <a href="https://github.com/oscarmunoz20/owlmPy/blob/master/twobytwo_example.ipynb" >notebook</a> to get an example of the two by two matrix method.<br>
 See the following <a href="https://github.com/oscarmunoz20/owlmPy/blob/master/FDTD_1D_example.ipynb" >notebook</a> to get an example of a 1D FDTD simulation.
 
 ## Required Dependencies
