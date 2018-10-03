@@ -6,7 +6,7 @@ Package home at Github: https://github.com/oscarmunoz20/owlmPy
 owlmPy is a python package for the modeling and simulation of the propagation of electromagnetic waves in structured multilayers with magneto-optical activity using Finite Differences Time-Domain method
 
 ## Documentation
-This package is a result of <a href="#" >link</a>
+This package is a result of <a href="https://www.overleaf.com/read/pyycjpvfvmqr" >link</a>
 
 ## Installation
 It can be installed using pip:
