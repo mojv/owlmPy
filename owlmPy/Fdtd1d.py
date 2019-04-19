@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 
-class fdtd_1d:
+
+class Fdtd1d:
 
     def __init__(self, ds_in, eps_in, mus_in, lambda_min_in, lambda_max_in, Ny_in=None, Nd_in=None, offset_in=None, nbc_in=None, epsrc_in=None, musrc_in=None, src_ini_in=None, NFREQ_in=None):
 
@@ -47,7 +48,7 @@ class fdtd_1d:
         self.dz = d / self.N
         self.N += self.offset
         self.z = np.arange(0, self.N, 1) * self.dz  # z axis
-        self.src_ini = src_ini_in
+        self.src_ini = zsrc_ini_in
     
         # ========Compute Position of Materials on Grid ========
         eps_d = np.ones(self.N)
@@ -178,4 +179,4 @@ class fdtd_1d:
             color += 0.1
 
         ani = animation.ArtistAnimation(fig, plts, interval=50, repeat_delay=3000)
-        ani.save(filename)
+        plt.show()
