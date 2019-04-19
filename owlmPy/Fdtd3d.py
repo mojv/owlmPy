@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from pylab import *
 from tqdm import tqdm
 
 class Fdtd3d:
