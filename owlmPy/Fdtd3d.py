@@ -3,12 +3,13 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from tqdm import tqdm
 
+
 class Fdtd3d:
 
-    def __init__(self, x_in, y_in,  z_in, pml_in, lambda_min_in, lambda_max_in, n_lambd, src_ini_in, epsrc_in, musrc_in, NFREQ_in):
+    def __init__(self, x_in, y_in,  z_in, pml_in, lambda_min_in, lambda_max_in, n_lambd, src_ini_in):
 
         self.c0 = 299792458 * 100  # speed of light cm/s
-        self.eps_o = 8.85e-14  # permittivity of vacuum in F/cm
+        self.eps_o = 1  # permittivity of vacuum
 
         # ======Calculation of steps in the spatial yee grid========
         self.x = x_in * (10 ** (-7))  # with of the domain in cm
@@ -49,37 +50,20 @@ class Fdtd3d:
         self.sx = (self.eps_o / (2 * self.dt)) * (self.sx ** 3)
         self.sy = (self.eps_o / (2 * self.dt)) * (self.sx ** 3)
         self.sz = (self.eps_o / (2 * self.dt)) * (self.sx ** 3)
-        #self.sx = self.sx * 0
-        #self.sy = self.sy * 0
-        #self.sz = self.sz * 0
+        # self.sx = self.sx * 0
+        # self.sy = self.sy * 0
+        # self.sz = self.sz * 0
 
-        # ======Compute the Source Functions for Ey/Hx Mode ========
-        delt = self.delta / (2 * self.c0) + self.dt / 2  # total delay between E and H because Yee Grid
-        a = - np.sqrt(epsrc_in / musrc_in)  # amplitude of H field
-        self.Esrc_x = np.exp(-((self.t - 6 * tao) / tao) ** 2) * 10 # E field source
-        self.Esrc_y = np.exp(-((self.t - 6 * tao) / tao) ** 2) * 10 # E field source
-        self.Esrc_z = np.exp(-((self.t - 6 * tao) / tao) ** 2) * 10 # E field source
-        self.Hsrc_x = a * np.exp(-((self.t - 6 * tao + delt) / tao) ** 2) * 10  # H field source
-        self.Hsrc_y = a * np.exp(-((self.t - 6 * tao + delt) / tao) ** 2) * 10  # H field source
-        self.Hsrc_z = a * np.exp(-((self.t - 6 * tao + delt) / tao) ** 2) * 10  # H field source
+        # ====== Compute the Source Functions ========
+        delay = self.delta / (2 * self.c0) + self.dt / 2  # total delay because Yee Grid
+        self.Esrc_x = np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # E field source
+        self.Esrc_y = np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # E field source
+        self.Esrc_z = np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # E field source
+        self.Hsrc_x = -np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # H field source
+        self.Hsrc_y = -np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # H field source
+        self.Hsrc_z = -np.exp(-((self.t - 6 * tao + delay) / tao) ** 2)  # H field source
 
-        # ====== Initialize the Fourier Transforms ========
-        self.FREQ = np.linspace(fmin, fmax, NFREQ_in)
-        self.K = np.exp(-1j * 2 * np.pi * self.dt * self.FREQ)
-        self.REF = np.zeros(NFREQ_in) + 0j
-        self.TRN = np.zeros(NFREQ_in) + 0j
-        self.SRC = np.zeros(NFREQ_in) + 0j
-        self.NREF = np.zeros(NFREQ_in)
-        self.NTRN = np.zeros(NFREQ_in)
-        self.CON = np.zeros(NFREQ_in)
-
-        # ====== Initialize update coefficients and compensate for numerical dispersion ====
-        self.mExx = 1/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
-        self.mEyy = 1/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
-        self.mEzz = 1/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
-        self.mHxx = -(self.c0*self.dt)/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
-        self.mHyy = -(self.c0*self.dt)/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
-        self.mHzz = -(self.c0*self.dt)/(np.ones((self.Nz, self.Nx, self.Ny))*self.delta)
+        # ====== Initialize permittivity and permeability ====
         self.mu_xx = np.ones((self.Nz, self.Nx, self.Ny))
         self.mu_yy = np.ones((self.Nz, self.Nx, self.Ny))
         self.mu_zz = np.ones((self.Nz, self.Nx, self.Ny))
@@ -87,13 +71,12 @@ class Fdtd3d:
         self.eps_yy = np.ones((self.Nz, self.Nx, self.Ny))
         self.eps_zz = np.ones((self.Nz, self.Nx, self.Ny))
 
-
         # ====== Declare Variables for Animation ====
         self.Etot = []
         self.Htot = []
         self.frames = 0
 
-        #====== Set Fields Variables =============
+        # ====== Initialize Fields Variables =============
         self.Hx = np.zeros((self.Nz, self.Nx, self.Ny))
         self.Hy = np.zeros((self.Nz, self.Nx, self.Ny))
         self.Hz = np.zeros((self.Nz, self.Nx, self.Ny))
@@ -104,107 +87,66 @@ class Fdtd3d:
         self.Ey = np.zeros((self.Nz, self.Nx, self.Ny))
         self.Ez = np.zeros((self.Nz, self.Nx, self.Ny))
 
+        # ===============Setting PML update coefficients ==========================================
+        self.mHx0 = (1/self.dt) + ((self.sy+self.sz)/(2*self.eps_o)) + (self.sy*self.sz*self.dt/(4*(self.eps_o**2)))
+        self.mHx1 = (1/self.mHx0)*((1/self.dt) - ((self.sy+self.sz)/(2*self.eps_o)) - (self.sy*self.sz*self.dt/(4*(self.eps_o**2))))
+        self.mHx2 = -(self.c0/(self.mHx0*self.mu_xx))
+        self.mHx3 = -(self.c0*self.dt*self.sx/(self.mHx0*self.eps_o*self.mu_xx))
+        self.mHx4 = -(self.dt*self.sy*self.sz/(self.mHx0*(self.eps_o**2)))
+        self.ICEx = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IHx = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CEx = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mHy0 = (1/self.dt) + ((self.sx+self.sz)/(2*self.eps_o)) + (self.sx*self.sz*self.dt/(4*(self.eps_o**2)))
+        self.mHy1 = (1/self.mHy0)*((1/self.dt) - ((self.sx+self.sz)/(2*self.eps_o)) - (self.sx*self.sz*self.dt/(4*(self.eps_o**2))))
+        self.mHy2 = -(self.c0/(self.mHy0*self.mu_yy))
+        self.mHy3 = -(self.c0*self.dt*self.sy/(self.mHy0*self.eps_o*self.mu_yy))
+        self.mHy4 = -(self.dt*self.sx*self.sz/(self.mHy0*(self.eps_o**2)))
+        self.ICEy = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IHy = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CEy = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mHz0 = (1/self.dt) + ((self.sx+self.sy)/(2*self.eps_o)) + (self.sx*self.sy*self.dt/(4*(self.eps_o**2)))
+        self.mHz1 = (1/self.mHz0)*((1/self.dt) - ((self.sx+self.sy)/(2*self.eps_o)) - (self.sx*self.sy*self.dt/(4*(self.eps_o**2))))
+        self.mHz2 = -(self.c0/(self.mHz0*self.mu_zz))
+        self.mHz3 = -(self.c0*self.dt*self.sz/(self.mHz0*self.eps_o*self.mu_zz))
+        self.mHz4 = -(self.dt*self.sx*self.sy/(self.mHz0*(self.eps_o**2)))
+        self.ICEz = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IHz = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CEz = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mDx0 = (1/self.dt) + ((self.sy+self.sz)/(2*self.eps_o)) + (self.sz*self.sz*self.dt/(4*(self.eps_o**2)))
+        self.mDx1 = (1/self.mDx0)*((1/self.dt) - ((self.sy+self.sz)/(2*self.eps_o)) - (self.sy*self.sz*self.dt/(4*(self.eps_o**2))))
+        self.mDx2 = (self.c0/self.mDx0)
+        self.mDx3 = (self.c0*self.dt*self.sx/(self.mDx0*self.eps_o))
+        self.mDx4 = -(self.dt*self.sy*self.sz/(self.mDx0*(self.eps_o**2)))
+        self.ICHx = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IDx = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CHx = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mDy0 = (1/self.dt) + ((self.sx+self.sz)/(2*self.eps_o)) + (self.sx*self.sz*self.dt/(4*(self.eps_o**2)))
+        self.mDy1 = (1/self.mDy0)*((1/self.dt) - ((self.sx+self.sz)/(2*self.eps_o)) - (self.sx*self.sz*self.dt/(4*(self.eps_o**2))))
+        self.mDy2 = (self.c0/self.mDy0)
+        self.mDy3 = (self.c0*self.dt*self.sy/(self.mDy0*self.eps_o))
+        self.mDy4 = -(self.dt*self.sx*self.sz/(self.mDy0*(self.eps_o**2)))
+        self.ICHy = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IDy = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CHy = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mDz0 = (1/self.dt) + ((self.sx+self.sy)/(2*self.eps_o)) + (self.sx*self.sy*self.dt/(4*(self.eps_o**2)))
+        self.mDz1 = (1/self.mDz0)*((1/self.dt) - ((self.sx+self.sy)/(2*self.eps_o)) - (self.sx*self.sy*self.dt/(4*(self.eps_o**2))))
+        self.mDz2 = (self.c0/self.mDz0)
+        self.mDz3 = (self.c0*self.dt*self.sz/(self.mDz0*self.eps_o))
+        self.mDz4 = -(self.dt*self.sx*self.sy/(self.mDz0*(self.eps_o**2)))
+        self.ICHz = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.IDz = np.zeros((self.Nz, self.Nx, self.Ny))
+        self.CHz = np.zeros((self.Nz, self.Nx, self.Ny))
+
+        self.mEx1 = 1/self.eps_xx
+        self.mEy1 = 1/self.eps_yy
+        self.mEz1 = 1/self.eps_zz
+
     def run_sim(self, fr=None):
-
-        # ======E and H =======
-        if fr is not None:
-            self.frames = int(np.ceil(self.S / fr))
-            self.Etot = np.zeros((int(np.ceil((self.S - 2) / self.frames)), self.Nz, self.Nx, self.Ny))
-            self.Htot = np.zeros((int(np.ceil((self.S - 2) / self.frames)), self.Nz, self.Nx, self.Ny))
-        else:
-            self.frames = self.S
-
-        for i in tqdm(range(self.S - 2)):
-
-            self.Hx[0:-1, :, 0:-1] = self.Hx[0:-1, :, 0:-1] + self.mHxx[0:-1, :, 0:-1] * (self.Ez[0:-1, :, 1:] - self.Ez[0:-1, :, 0:-1] - self.Ey[1:, :, 0:-1] + self.Ey[0:-1, :, 0:-1])
-            self.Hy[0:-1, 0:-1, :] = self.Hy[0:-1, 0:-1, :] + self.mHyy[0:-1, 0:-1, :] * (self.Ex[1:, 0:-1, :] - self.Ex[0:-1, 0:-1, :] - self.Ez[0:-1, 1:, :] + self.Ez[0:-1, 0:-1, :])
-            self.Dz[:, 1:, 1:] = self.Dz[:, 1:, 1:] + (self.c0 * self.dt) * (self.Hy[:, 1:, 1:] - self.Hy[:, 0:-1, 1:] - self.Hx[:, 1:, 1:] + self.Hx[:, 1:, 0:-1])
-
-            #self.Ez[:, 1:, 1:] = self.Ez[:, 1:, 1:] + (self.c0 * self.dt) * self.mEzz[:, 1:, 1:] * (self.Hy[:, 1:, 1:] - self.Hy[:, 0:-1, 1:] - self.Hx[:, 1:, 1:] + self.Hx[:, 1:, 0:-1])
-            self.Ez = self.mEzz * self.Dz
-
-            self.Hz[:, 0:-1, 0:-1] = self.Hz[:, 0:-1, 0:-1] + self.mHzz[:, 0:-1, 0:-1] * (self.Ey[:, 1:, 0:-1] - self.Ey[:, 0:-1, 0:-1] - self.Ex[:, 0:-1, 1:] + self.Ex[:, 0:-1, 0:-1])
-            self.Dx[1:, :, 1:] = self.Dx[1:, :, 1:] + (self.c0 * self.dt) * (self.Hz[1:, :, 1:] - self.Hz[1:, :, 0:-1] - self.Hy[1:, :, 1:] + self.Hy[0:-1, :, 1:])
-            self.Dy[1:, 1:, :] = self.Dy[1:, 1:, :] + (self.c0 * self.dt) * (self.Hx[1:, 1:, :] - self.Hx[0:-1, 1:, :] - self.Hz[1:, 1:, :] + self.Hz[1:, 0:-1, :])
-
-            #self.Ex[1:, :, 1:] = self.Ex[1:, :, 1:] + (self.c0 * self.dt) * self.mExx[1:, :, 1:] * (self.Hz[1:, :, 1:] - self.Hz[1:, :, 0:-1] - self.Hy[1:, :, 1:] + self.Hy[0:-1, :, 1:])
-            #self.Ey[1:, 1:, :] = self.Ey[1:, 1:, :] + (self.c0 * self.dt) * self.mEyy[1:, 1:, :] * (self.Hx[1:, 1:, :] - self.Hx[0:-1, 1:, :] - self.Hz[1:, 1:, :] + self.Hz[1:, 0:-1, :])
-            self.Ex = self.mExx * self.Dx
-            self.Ey = self.mEyy * self.Dy
-
-            self.Ez[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Esrc_z[i]
-            self.Ey[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Esrc_y[i]
-            self.Ex[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Esrc_x[i]
-            self.Hz[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_z[i]
-            self.Hy[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_y[i]
-            self.Hx[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_x[i]
-
-
-            if i % self.frames == 0:
-                if fr is not None:
-                    self.Htot[int(np.   ceil(i / self.frames)), :, :, :] = self.Hx
-                    self.Etot[int(np.ceil(i / self.frames)), :, :, :] = self.Ez
-
-    def run_sim_pml(self, fr=None):
-
-        # ===============Setting PML parameters==========================================
-        mHx0 = (1/self.dt) + ((self.sy+self.sz)/(2*self.eps_o)) + (self.sy*self.sz*self.dt/(4*(self.eps_o**2)))
-        mHx1 = (1/mHx0)*((1/self.dt) - ((self.sy+self.sz)/(2*self.eps_o)) - (self.sy*self.sz*self.dt/(4*(self.eps_o**2))))
-        mHx2 = -(self.c0/(mHx0*self.mu_xx))
-        mHx3 = -(self.c0*self.dt*self.sx/(mHx0*self.eps_o*self.mu_xx))
-        mHx4 = -(self.dt*self.sy*self.sz/(mHx0*(self.eps_o**2)))
-        ICEx = np.zeros((self.Nz, self.Nx, self.Ny))
-        IHx = np.zeros((self.Nz, self.Nx, self.Ny))
-        CEx = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mHy0 = (1/self.dt) + ((self.sx+self.sz)/(2*self.eps_o)) + (self.sx*self.sz*self.dt/(4*(self.eps_o**2)))
-        mHy1 = (1/mHy0)*((1/self.dt) - ((self.sx+self.sz)/(2*self.eps_o)) - (self.sx*self.sz*self.dt/(4*(self.eps_o**2))))
-        mHy2 = -(self.c0/(mHy0*self.mu_yy))
-        mHy3 = -(self.c0*self.dt*self.sy/(mHy0*self.eps_o*self.mu_yy))
-        mHy4 = -(self.dt*self.sx*self.sz/(mHy0*(self.eps_o**2)))
-        ICEy = np.zeros((self.Nz, self.Nx, self.Ny))
-        IHy = np.zeros((self.Nz, self.Nx, self.Ny))
-        CEy = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mHz0 = (1/self.dt) + ((self.sx+self.sy)/(2*self.eps_o)) + (self.sx*self.sy*self.dt/(4*(self.eps_o**2)))
-        mHz1 = (1/mHz0)*((1/self.dt) - ((self.sx+self.sy)/(2*self.eps_o)) - (self.sx*self.sy*self.dt/(4*(self.eps_o**2))))
-        mHz2 = -(self.c0/(mHz0*self.mu_zz))
-        mHz3 = -(self.c0*self.dt*self.sz/(mHz0*self.eps_o*self.mu_zz))
-        mHz4 = -(self.dt*self.sx*self.sy/(mHz0*(self.eps_o**2)))
-        ICEz = np.zeros((self.Nz, self.Nx, self.Ny))
-        IHz = np.zeros((self.Nz, self.Nx, self.Ny))
-        CEz = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mDx0 = (1/self.dt) + ((self.sy+self.sz)/(2*self.eps_o)) + (self.sz*self.sz*self.dt/(4*(self.eps_o**2)))
-        mDx1 = (1/mDx0)*((1/self.dt) - ((self.sy+self.sz)/(2*self.eps_o)) - (self.sy*self.sz*self.dt/(4*(self.eps_o**2))))
-        mDx2 = (self.c0/mDx0)
-        mDx3 = (self.c0*self.dt*self.sx/(mDx0*self.eps_o))
-        mDx4 = -(self.dt*self.sy*self.sz/(mDx0*(self.eps_o**2)))
-        ICHx = np.zeros((self.Nz, self.Nx, self.Ny))
-        IDx = np.zeros((self.Nz, self.Nx, self.Ny))
-        CHx = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mDy0 = (1/self.dt) + ((self.sx+self.sz)/(2*self.eps_o)) + (self.sx*self.sz*self.dt/(4*(self.eps_o**2)))
-        mDy1 = (1/mDy0)*((1/self.dt) - ((self.sx+self.sz)/(2*self.eps_o)) - (self.sx*self.sz*self.dt/(4*(self.eps_o**2))))
-        mDy2 = (self.c0/mDy0)
-        mDy3 = (self.c0*self.dt*self.sy/(mDy0*self.eps_o))
-        mDy4 = -(self.dt*self.sx*self.sz/(mDy0*(self.eps_o**2)))
-        ICHy = np.zeros((self.Nz, self.Nx, self.Ny))
-        IDy = np.zeros((self.Nz, self.Nx, self.Ny))
-        CHy = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mDz0 = (1/self.dt) + ((self.sx+self.sy)/(2*self.eps_o)) + (self.sx*self.sy*self.dt/(4*(self.eps_o**2)))
-        mDz1 = (1/mDz0)*((1/self.dt) - ((self.sx+self.sy)/(2*self.eps_o)) - (self.sx*self.sy*self.dt/(4*(self.eps_o**2))))
-        mDz2 = (self.c0/mDz0)
-        mDz3 = (self.c0*self.dt*self.sz/(mDz0*self.eps_o))
-        mDz4 = -(self.dt*self.sx*self.sy/(mDz0*(self.eps_o**2)))
-        ICHz = np.zeros((self.Nz, self.Nx, self.Ny))
-        IDz = np.zeros((self.Nz, self.Nx, self.Ny))
-        CHz = np.zeros((self.Nz, self.Nx, self.Ny))
-
-        mEx1 = 1/self.eps_xx
-        mEy1 = 1/self.eps_yy
-        mEz1 = 1/self.eps_zz
 
         # ====== Record Frames For Animation =======
         if fr is not None:
@@ -217,62 +159,66 @@ class Fdtd3d:
         # ======== Time Evolution ====================
         for i in tqdm(range(self.S - 2)):
             # =============== Update PML parameters=========================
-            CEx[0:-1, :, 0:-1] = (self.Ez[0:-1, :, 1:] - self.Ez[0:-1, :, 0:-1] - self.Ey[1:, :, 0:-1] + self.Ey[0:-1, :, 0:-1]) / self.delta
-            CEx[0:-1, :, -1] = (0 - self.Ez[0:-1, :, -1] - self.Ey[1:, :, -1] + self.Ey[0:-1, :, -1]) / self.delta
-            CEx[-1, :, 0:-1] = (self.Ez[-1, :, 1:] - self.Ez[-1, :, 0:-1] - 0 + self.Ey[-1, :, 0:-1]) / self.delta
-            CEx[-1, :, -1] = (0 - self.Ez[-1, :, -1] - 0 + self.Ey[-1, :, -1]) / self.delta
-            ICEx += CEx
-            IHx += self.Hx
-            CEy[0:-1, 0:-1, :] = (self.Ex[1:, 0:-1, :] - self.Ex[0:-1, 0:-1, :] - self.Ez[0:-1, 1:, :] + self.Ez[0:-1, 0:-1, :]) / self.delta
-            CEy[-1, 0:-1, :] = (0 - self.Ex[-1, 0:-1, :] - self.Ez[-1, 1:, :] + self.Ez[-1, 0:-1, :]) / self.delta
-            CEy[0:-1, -1, :] = (self.Ex[1:, -1, :] - self.Ex[0:-1, -1, :] - 0 + self.Ez[0:-1, -1, :]) / self.delta
-            CEy[-1, -1, :] = (0 - self.Ex[-1, -1, :] - 0 + self.Ez[-1, -1, :]) / self.delta
-            ICEy += CEy
-            IHy += self.Hy
-            CEz[:, 0:-1, 0:-1] = (self.Ey[:, 1:, 0:-1] - self.Ey[:, 0:-1, 0:-1] - self.Ex[:, 0:-1, 1:] + self.Ex[:, 0:-1, 0:-1]) / self.delta
-            CEz[:, -1, 0:-1] = (0 - self.Ey[:, -1, 0:-1] - self.Ex[:, -1, 1:] + self.Ex[:, -1, 0:-1]) / self.delta
-            CEz[:, 0:-1, -1] = (self.Ey[:, 1:, -1] - self.Ey[:, 0:-1, -1] - 0 + self.Ex[:, 0:-1, -1]) / self.delta
-            CEz[:, -1, -1] = (0 - self.Ey[:, -1, -1] - 0 + self.Ex[:, -1, -1]) / self.delta
-            ICEy += CEz
-            IHz += self.Hz
+            self.ICEx += self.CEx
+            self.IHx += self.Hx
+            self.CEx[0:-1, :, 0:-1] = (self.Ez[0:-1, :, 1:] - self.Ez[0:-1, :, 0:-1] - self.Ey[1:, :, 0:-1] + self.Ey[0:-1, :, 0:-1]) / self.delta
+            self.CEx[0:-1, :, -1] = (0 - self.Ez[0:-1, :, -1] - self.Ey[1:, :, -1] + self.Ey[0:-1, :, -1]) / self.delta
+            self.CEx[-1, :, 0:-1] = (self.Ez[-1, :, 1:] - self.Ez[-1, :, 0:-1] - 0 + self.Ey[-1, :, 0:-1]) / self.delta
+            self.CEx[-1, :, -1] = (0 - self.Ez[-1, :, -1] - 0 + self.Ey[-1, :, -1]) / self.delta
 
-            self.Hx = mHx1*self.Hx + mHx2*CEx + mHx3*ICEx + mHx4*IHx
-            self.Hy = mHy1*self.Hy + mHy2*CEy + mHy3*ICEy + mHy4*IHy
-            self.Hz = mHz1*self.Hz + mHz2*CEz + mHz3*ICEz + mHz4*IHz
+            self.ICEy += self.CEy
+            self.IHy += self.Hy
+            self.CEy[0:-1, 0:-1, :] = (self.Ex[1:, 0:-1, :] - self.Ex[0:-1, 0:-1, :] - self.Ez[0:-1, 1:, :] + self.Ez[0:-1, 0:-1, :]) / self.delta
+            self.CEy[-1, 0:-1, :] = (0 - self.Ex[-1, 0:-1, :] - self.Ez[-1, 1:, :] + self.Ez[-1, 0:-1, :]) / self.delta
+            self.CEy[0:-1, -1, :] = (self.Ex[1:, -1, :] - self.Ex[0:-1, -1, :] - 0 + self.Ez[0:-1, -1, :]) / self.delta
+            self.CEy[-1, -1, :] = (0 - self.Ex[-1, -1, :] - 0 + self.Ez[-1, -1, :]) / self.delta
 
-            CHx[1:, :, 1:] = (self.Hz[1:, :, 1:] - self.Hz[1:, :, 0:-1] - self.Hy[1:, :, 1:] + self.Hy[0:-1, :, 1:]) / self.delta
-            CHx[1:, :, 0] = (self.Hz[1:, :, 0] - 0 - self.Hy[1:, :, 0] + self.Hy[0:-1, :, 0]) / self.delta
-            CHx[0, :, 1:] = (self.Hz[0, :, 1:] - self.Hz[0, :, 0:-1] - self.Hy[0, :, 1:] + 0) / self.delta
-            CHx[0, :, 0] = (self.Hz[0, :, 0] - 0 - self.Hy[0, :, 0] + 0) / self.delta
-            ICHx += CHx
-            IDx += self.Dx
-            CHy[1:, 1:, :] = (self.Hx[1:, 1:, :] - self.Hx[0:-1, 1:, :] - self.Hz[1:, 1:, :] + self.Hz[1:, 0:-1, :]) / self.delta
-            CHy[0, 1:, :] = (self.Hx[0, 1:, :] - 0 - self.Hz[0, 1:, :] + self.Hz[0, 0:-1, :]) / self.delta
-            CHy[1:, 0, :] = (self.Hx[1:, 0, :] - self.Hx[0:-1, 0, :] - self.Hz[1:, 0, :] + 0) / self.delta
-            CHy[0, 0, :] = (self.Hx[0, 0, :] - 0 - self.Hz[0, 0, :] + 0) / self.delta
-            ICHy += CHy
-            IDy += self.Dy
-            CHz[:, 1:, 1:] = (self.Hy[:, 1:, 1:] - self.Hy[:, 0:-1, 1:] - self.Hx[:, 1:, 1:] + self.Hx[:, 1:, 0:-1]) / self.delta
-            CHz[:, 0, 1:] = (self.Hy[:, 0, 1:] - 0 - self.Hx[:, 0, 1:] + self.Hx[:, 0, 0:-1]) / self.delta
-            CHz[:, 1:, 0] = (self.Hy[:, 1:, 0] - self.Hy[:, 0:-1, 0] - self.Hx[:, 1:, 0] + 0) / self.delta
-            CHz[:, 0, 0] = (self.Hy[:, 0, 0] - 0 - self.Hx[:, 0, 0] + 0) / self.delta
-            ICHy += CHz
-            IDz += self.Dz
+            self.ICEy += self.CEz
+            self.IHz += self.Hz
+            self.CEz[:, 0:-1, 0:-1] = (self.Ey[:, 1:, 0:-1] - self.Ey[:, 0:-1, 0:-1] - self.Ex[:, 0:-1, 1:] + self.Ex[:, 0:-1, 0:-1]) / self.delta
+            self.CEz[:, -1, 0:-1] = (0 - self.Ey[:, -1, 0:-1] - self.Ex[:, -1, 1:] + self.Ex[:, -1, 0:-1]) / self.delta
+            self.CEz[:, 0:-1, -1] = (self.Ey[:, 1:, -1] - self.Ey[:, 0:-1, -1] - 0 + self.Ex[:, 0:-1, -1]) / self.delta
+            self.CEz[:, -1, -1] = (0 - self.Ey[:, -1, -1] - 0 + self.Ex[:, -1, -1]) / self.delta
 
-            self.Dx = mDx1*self.Dx + mDx2*CHx + mDx3*ICHx + mDx4*IDx
-            self.Dy = mDy1*self.Dy + mDy2*CHy + mDy3*ICHy + mDy4*IDy
-            self.Dz = mDz1*self.Dz + mDz2*CHz + mDz3*ICHz + mDz4*IDz
+            self.Hx = self.mHx1*self.Hx + self.mHx2*self.CEx + self.mHx3*self.ICEx + self.mHx4*self.IHx
+            self.Hy = self.mHy1*self.Hy + self.mHy2*self.CEy + self.mHy3*self.ICEy + self.mHy4*self.IHy
+            self.Hz = self.mHz1*self.Hz + self.mHz2*self.CEz + self.mHz3*self.ICEz + self.mHz4*self.IHz
 
-            self.Ez = mEx1 * self.Dz
-            self.Ex = mEy1 * self.Dx
-            self.Ey = mEz1 * self.Dy
+            self.ICHx += self.CHx
+            self.IDx += self.Dx
+            self.CHx[1:, :, 1:] = (self.Hz[1:, :, 1:] - self.Hz[1:, :, 0:-1] - self.Hy[1:, :, 1:] + self.Hy[0:-1, :, 1:]) / self.delta
+            self.CHx[1:, :, 0] = (self.Hz[1:, :, 0] - 0 - self.Hy[1:, :, 0] + self.Hy[0:-1, :, 0]) / self.delta
+            self.CHx[0, :, 1:] = (self.Hz[0, :, 1:] - self.Hz[0, :, 0:-1] - self.Hy[0, :, 1:] + 0) / self.delta
+            self.CHx[0, :, 0] = (self.Hz[0, :, 0] - 0 - self.Hy[0, :, 0] + 0) / self.delta
 
-            self.Ez[self.src_ini[2], self.src_ini[0], self.src_ini[1]] += self.Esrc_z[i]
-            self.Ey[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Esrc_y[i]
-            self.Ex[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Esrc_x[i]
-            self.Hz[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_z[i]
-            self.Hy[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_y[i]
-            self.Hx[self.src_ini[0], self.src_ini[1], self.src_ini[2]] += self.Hsrc_x[i]
+            self.ICHy += self.CHy
+            self.IDy += self.Dy
+            self.CHy[1:, 1:, :] = (self.Hx[1:, 1:, :] - self.Hx[0:-1, 1:, :] - self.Hz[1:, 1:, :] + self.Hz[1:, 0:-1, :]) / self.delta
+            self.CHy[0, 1:, :] = (self.Hx[0, 1:, :] - 0 - self.Hz[0, 1:, :] + self.Hz[0, 0:-1, :]) / self.delta
+            self.CHy[1:, 0, :] = (self.Hx[1:, 0, :] - self.Hx[0:-1, 0, :] - self.Hz[1:, 0, :] + 0) / self.delta
+            self.CHy[0, 0, :] = (self.Hx[0, 0, :] - 0 - self.Hz[0, 0, :] + 0) / self.delta
+
+            self.ICHy += self.CHz
+            self.IDz += self.Dz
+            self.CHz[:, 1:, 1:] = (self.Hy[:, 1:, 1:] - self.Hy[:, 0:-1, 1:] - self.Hx[:, 1:, 1:] + self.Hx[:, 1:, 0:-1]) / self.delta
+            self.CHz[:, 0, 1:] = (self.Hy[:, 0, 1:] - 0 - self.Hx[:, 0, 1:] + self.Hx[:, 0, 0:-1]) / self.delta
+            self.CHz[:, 1:, 0] = (self.Hy[:, 1:, 0] - self.Hy[:, 0:-1, 0] - self.Hx[:, 1:, 0] + 0) / self.delta
+            self.CHz[:, 0, 0] = (self.Hy[:, 0, 0] - 0 - self.Hx[:, 0, 0] + 0) / self.delta
+
+            self.Dx = self.mDx1*self.Dx + self.mDx2*self.CHx + self.mDx3*self.ICHx + self.mDx4*self.IDx
+            self.Dy = self.mDy1*self.Dy + self.mDy2*self.CHy + self.mDy3*self.ICHy + self.mDy4*self.IDy
+            self.Dz = self.mDz1*self.Dz + self.mDz2*self.CHz + self.mDz3*self.ICHz + self.mDz4*self.IDz
+
+            self.Ez = self.mEx1 * self.Dz
+            self.Ex = self.mEy1 * self.Dx
+            self.Ey = self.mEz1 * self.Dy
+
+            self.Ez[self.src_ini[2], self.src_ini[0], self.src_ini[1]] = self.Ez[self.src_ini[2], self.src_ini[0], self.src_ini[1]] + self.Esrc_z[i]
+            #self.Ey[self.src_ini[0], self.src_ini[1], self.src_ini[2]] = self.Ey[self.src_ini[0], self.src_ini[1], self.src_ini[2]] + self.Esrc_y[i]
+            #self.Ex[self.src_ini[0], self.src_ini[1], self.src_ini[2]] = self.Ex[self.src_ini[0], self.src_ini[1], self.src_ini[2]] + self.Esrc_x[i]
+            #self.Hz[self.src_ini[0], self.src_ini[1], self.src_ini[2]] = self.Hz[self.src_ini[0], self.src_ini[1], self.src_ini[2]] + self.Hsrc_z[i]
+            #self.Hy[self.src_ini[0], self.src_ini[1], self.src_ini[2]] = self.Hy[self.src_ini[0], self.src_ini[1], self.src_ini[2]] + self.Hsrc_y[i]
+            #self.Hx[self.src_ini[0], self.src_ini[1], self.src_ini[2]] = self.Hx[self.src_ini[0], self.src_ini[1], self.src_ini[2]] + self.Hsrc_x[i]
 
             if i % self.frames == 0:
                 if fr is not None:

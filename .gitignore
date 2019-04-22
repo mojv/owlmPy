@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+meep/
 develop-eggs/
 dist/
 downloads/
@@ -19,6 +20,7 @@ lib64/
 parts/
 sdist/
 var/
+.idea/
 wheels/
 *.egg-info/
 .installed.cfg
