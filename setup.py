@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="src",
+    name="owlmPy",
     version="0.0.7",
     author="Oscar Munoz, Nivolas Avilan, Cesar Herreno",
     author_email="oscar.munozs@utadeo.edu.co",

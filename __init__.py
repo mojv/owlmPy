@@ -1,1 +1,1 @@
-from .src import nanodisks, gyrotropic_materials, plot
+from .owlmPy import nanodisks, gyrotropic_materials, plot
