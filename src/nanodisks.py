@@ -3,7 +3,7 @@ import math
 import cmath
 import numpy as np
 import pickle
-import owlmPy.gyrotropic_materials as gyr
+from .gyrotropic_materials import gyrotropic_conversion as gyr
 
 
 class nanodisk:
@@ -15,8 +15,9 @@ class nanodisk:
                  characteristic_vector, abs_layer, air_layer, lmin, lmax, magnetic_field=mp.Vector3(0, 0, 0)):
 
         self.sz = abs_layer + air_layer + np.sum(heights_vector) + abs_layer
-        heights_vector[-1] = heights_vector[
-                                 -1] + abs_layer  # The las item is  substrate and will be extended to the abs layer
+
+        # The las item is  substrate and will be extended to the abs layer
+        heights_vector[-1] = heights_vector[-1] + abs_layer
         materials_position = np.zeros(heights_vector.size)
 
         for i in range(heights_vector.size):
@@ -42,7 +43,7 @@ class nanodisk:
         self.geometry = []
 
         for i in range(materials_position.size):
-            mat = gyr.gyrotropic_conversion(materials_vector[i], magnetic_field)
+            mat = materials_vector[i] #gyr.gyrotropic_conversion(materials_vector[i], magnetic_field)
             if geometries_vector[i] == 'cylinder':
                 self.geometry.append(
                     mp.Cylinder(material=mat, radius=characteristic_vector[i], height=heights_vector[i],
@@ -53,8 +54,6 @@ class nanodisk:
                                                               heights_vector[i]),
                                               center=mp.Vector3(0, 0, materials_position[i])))
 
-        susc = [mp.GyrotropicLorentzianSusceptibility(bias=magnetic_field)]
-        self.default_material = mp.Medium(epsilon=1, mu=1, E_susceptibilities=susc)
         # -----------------------------------------------------------------------------------------------
         # ------------------------------- Source Setup -------------------------------------------------
         # ----------------------------------------------------------------------------------------------
@@ -92,8 +91,7 @@ class nanodisk:
                             sources=sources,
                             boundary_layers=self.pml_layers,
                             k_point=self.k,
-                            resolution=self.resolution,
-                            default_material=self.default_material)
+                            resolution=self.resolution)
 
         refl = sim.add_flux(self.fcen, self.df, self.nfreq, refl_fr)
 
@@ -123,15 +121,14 @@ class nanodisk:
                             sources=sources,
                             boundary_layers=self.pml_layers,
                             k_point=self.k,
-                            resolution=self.resolution,
-                            default_material=self.default_material)
+                            resolution=self.resolution)
 
         refl = sim.add_flux(self.fcen, self.df, self.nfreq, refl_fr)
 
         trans = sim.add_flux(self.fcen, self.df, self.nfreq, trans_fr)
 
         # for normal run, load negated fields to subtract incident from refl. fields
-        #sim.load_minus_flux_data(refl, self.store['straight_refl_data'])
+        sim.load_minus_flux_data(refl, self.store['straight_refl_data'])
 
         sim.run(until_after_sources=mp.stop_when_fields_decayed(25, mp.Ey, self.pt, 1e-3))
 

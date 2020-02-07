@@ -76,7 +76,7 @@ def load_folder(folder):
     return second_param, flux_freqs, disk_refl_flux, disk_tran_flux, straight_tran_flux
 
 
-def heat_map(folder):
+def heat_map(folder, type):
 
     second_param, flux_freqs, disk_refl_flux, disk_tran_flux, straight_tran_flux = load_folder(folder)
 
@@ -88,22 +88,21 @@ def heat_map(folder):
     T = disk_tran_flux / straight_tran_flux
     A = 1 - R - T
 
-    fig = plt.figure()
-
-    # ax = Axes3D(fig) #<-- Note the difference from your original code...
-    #
-    # cset1 = ax.contour(X, Y, R, 100, extend3d=False)
-    # cset2 = ax.contour(X, Y, T, 100, extend3d=True)
-    # # cset3 = ax.contour(X, Y, A, 100, extend3d=True)
-    # ax.clabel(cset1, fontsize=9, inline=0)
-    # ax.clabel(cset2, fontsize=9, inline=1)
-    # # ax.clabel(cset3, fontsize=9, inline=1)
-
-    plt.pcolormesh(X, Y, T)
-    plt.xlabel("wavelength (nm)")
-    plt.ylabel("cell size (nm)")
-    plt.colorbar()
-    plt.show()
+    if type=='3D':
+        fig = plt.figure()
+        ax = Axes3D(fig) #<-- Note the difference from your original code...
+        cset1 = ax.contour(X, Y, R, 100, extend3d=False)
+        cset2 = ax.contour(X, Y, T, 100, extend3d=True)
+        # cset3 = ax.contour(X, Y, A, 100, extend3d=True)
+        ax.clabel(cset1, fontsize=9, inline=0)
+        ax.clabel(cset2, fontsize=9, inline=1)
+        # ax.clabel(cset3, fontsize=9, inline=1)
+    elif type=='heat_map':
+        plt.pcolormesh(X, Y, T)
+        plt.xlabel("wavelength (nm)")
+        plt.ylabel("cell size (nm)")
+        plt.colorbar()
+        plt.show()
 
 def param_plot(folder, lambd, lines, label):
 

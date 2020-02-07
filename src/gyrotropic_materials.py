@@ -1,8 +1,7 @@
 import meep as mp
 
 
-def gyrotropic_conversion (material, bias_vector):
-    bias = mp.Vector3(bias_vector[0], bias_vector[1], bias_vector[2])
+def gyrotropic_conversion (material, bias):
     material_suc = []
     for susceptibility in material.E_susceptibilities:
         if type(susceptibility).__name__ == 'DrudeSusceptibility':

@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="owlmPy",
-    version="0.0.6",
+    name="src",
+    version="0.0.7",
     author="Oscar Munoz, Nivolas Avilan, Cesar Herreno",
     author_email="oscar.munozs@utadeo.edu.co",
     description="A python package for the modeling and simulation of the propagation of electromagnetic waves in structured multilayers with magneto-optical activity using FDTD method",
