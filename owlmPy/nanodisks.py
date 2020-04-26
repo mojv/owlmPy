@@ -43,7 +43,7 @@ class nanodisk:
         self.geometry = []
 
         for i in range(materials_position.size):
-            mat = materials_vector[i] #gyr.gyrotropic_conversion(materials_vector[i], magnetic_field)
+            mat = gyr(materials_vector[i], magnetic_field)
             if geometries_vector[i] == 'cylinder':
                 self.geometry.append(
                     mp.Cylinder(material=mat, radius=characteristic_vector[i], height=heights_vector[i],
@@ -79,7 +79,6 @@ class nanodisk:
 
         refl_fr = mp.FluxRegion(center=mp.Vector3(0, 0, self.z_flux_refl), size=mp.Vector3(sx, sy, 0))
         trans_fr = mp.FluxRegion(center=mp.Vector3(0, 0, self.z_flux_trans), size=mp.Vector3(sx, sy, 0))
-
         return sources, refl_fr, trans_fr
 
     def empty_run(self, sx, sy, animate=False):
