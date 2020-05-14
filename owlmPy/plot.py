@@ -49,6 +49,9 @@ def freq_plot(sim_name, moving_avg, lines):
 
 def load_folder(folder):
     files_names = np.asarray(os.listdir(folder))
+    filter =  np.char.endswith(files_names, '.obj')
+    files_names = files_names[filter]
+
     files_names = np.sort(files_names)
     second_param = []
 
@@ -62,7 +65,7 @@ def load_folder(folder):
     straight_tran_flux = np.zeros((files_names.size, flux.size))
 
     for i in range(files_names.size):
-        if files_names[i].endswith(".obj") or files_names[i].endswith(".py"):
+        if files_names[i].endswith(".obj"):
             file = open(folder + files_names[i], 'rb')
             data = pickle.load(file)
             flux_freqs[i] = np.asarray(data['flux_freqs'])

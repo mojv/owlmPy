@@ -12,11 +12,12 @@ class nanodisk:
     nfreq = 500
 
     def __init__(self, theta, resolution, heights_vector, materials_vector, geometries_vector,
-                 characteristic_vector, abs_layer, air_layer, lmin, lmax, magnetic_field=mp.Vector3(0, 0, 0)):
+                 characteristic_vector, abs_layer, air_layer, lmin, lmax, coating_layer=None,
+                 magnetic_field=mp.Vector3(0, 0, 0)):
 
         self.sz = abs_layer + air_layer + np.sum(heights_vector) + abs_layer
 
-        # The las item is  substrate and will be extended to the abs layer
+        # The las item is the substrate and will be extended to the abs layer
         heights_vector[-1] = heights_vector[-1] + abs_layer
         materials_position = np.zeros(heights_vector.size)
 
@@ -42,6 +43,28 @@ class nanodisk:
 
         self.geometry = []
 
+        # -------------------------------- coating layer creation ---------------------------------------
+        if coating_layer is not None:
+            self.geometry.append(
+                mp.Cylinder(
+                    material=coating_layer['material'],
+                    radius=characteristic_vector[0] + coating_layer['size'],
+                    height=coating_layer['size'],
+                    center=mp.Vector3(0, 0, materials_position[0] + 0.5 * heights_vector[0] + 0.5 * coating_layer['size'])))
+            for i in range(materials_position.size):
+                if geometries_vector[i] == 'cylinder':
+                    self.geometry.append(
+                        mp.Cylinder(material=coating_layer['material'],
+                                    radius=characteristic_vector[i] + coating_layer['size'],
+                                    height=heights_vector[i],
+                                    center=mp.Vector3(0, 0, materials_position[i])))
+                elif geometries_vector[i] == 'block':
+                    self.geometry.append(mp.Block(
+                        material=coating_layer['material'],
+                        size=mp.Vector3(characteristic_vector[i][0], characteristic_vector[i][1], coating_layer['size']),
+                        center=mp.Vector3(0, 0, materials_position[i] + 0.5 * heights_vector[i] + 0.5 * coating_layer['size'])))
+
+        # -------------------------------- geometric  layer creation ---------------------------------------
         for i in range(materials_position.size):
             mat = gyr(materials_vector[i], magnetic_field)
             if geometries_vector[i] == 'cylinder':
@@ -49,10 +72,11 @@ class nanodisk:
                     mp.Cylinder(material=mat, radius=characteristic_vector[i], height=heights_vector[i],
                                 center=mp.Vector3(0, 0, materials_position[i])))
             elif geometries_vector[i] == 'block':
-                self.geometry.append(mp.Block(material=mat,
-                                              size=mp.Vector3(characteristic_vector[i][0], characteristic_vector[i][1],
-                                                              heights_vector[i]),
-                                              center=mp.Vector3(0, 0, materials_position[i])))
+                self.geometry.append(
+                    mp.Block(
+                        material=mat,
+                        size=mp.Vector3(characteristic_vector[i][0], characteristic_vector[i][1], heights_vector[i]),
+                        center=mp.Vector3(0, 0, materials_position[i])))
 
         # -----------------------------------------------------------------------------------------------
         # ------------------------------- Source Setup -------------------------------------------------
