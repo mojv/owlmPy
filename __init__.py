@@ -1,1 +1,1 @@
-from .owlmPy import nanodisks, gyrotropic_materials, plot, multicore
+from .src import nanodisks, gyrotropic_materials, plot, multicore
